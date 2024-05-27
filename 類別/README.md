@@ -12,7 +12,9 @@ url = 'https://data.moenv.gov.tw/api/v2/aqx_p_488?api_key=e8dd42e6-9b8b-43f8-991
 response:Response = requests.get(url)
 ```
 [原始碼檔案](https://github.com/NoktoX/__python-test-0516__/blob/main/%E9%A1%9E%E5%88%A5/download/lesson2.ipynb)
-使用**model requests**的內建功能
+
+
+>使用**model requests**的內建功能
 
 ```python
 import requests
