@@ -1,116 +1,65 @@
 import tkinter as tk
-import tkinter.messagebox as messagebox
-from tkinter import simpledialog, ttk
-from ttkthemes import ThemedTk
+from tkinter import simpledialog, messagebox
 
-class CustomMessagebox(tk.Toplevel):
-    def __init__(self, parent, title, message, status_color=None):
-        super().__init__(parent)
-        self.title(title)
-        self.message = message
-        self.status_color = status_color
+class BMIDialog(simpledialog.Dialog):
+    def __init__(self, parent, title, name, height, weight):
+        self.name = name
+        self.height = height
+        self.weight = weight
+        super().__init__(parent, title)
+    
+    def body(self, master):
+        bmi = self.weight / ((self.height / 100) ** 2)
         
-        self.body()
-        self.buttonbox()
-        
-    def body(self):
-        self.message_text = tk.Text(self, font=("Arial", 12), wrap="word", height=5, width=40)
-        self.message_text.insert(tk.END, self.message)
-        self.message_text.pack(padx=10, pady=10)
-
-        if self.status_color:
-            self.message_text.tag_add("status", "2.0", "2.end")
-            self.message_text.tag_config("status", foreground=self.status_color)
-
-    def buttonbox(self):
-        self.ok_button = ttk.Button(self, text="確定", command=self.destroy)
-        self.ok_button.pack(pady=10)
-
-def show_bmi_result():
-    try:
-        name = entry_name.get()
-        height = float(entry_height.get())
-        weight = float(entry_weight.get())
-        bmi = weight / (height / 100) ** 2
         if bmi < 18.5:
-            status = "體重過輕"
-            ideal_weight = 18.5 * (height / 100) ** 2
-            weight_change = ideal_weight - weight
-            status_color = "red"
-            advice = f"您需要至少增加 {abs(weight_change):.2f} 公斤才能達到正常體重。"
-        elif 18.5 <= bmi <= 24.9:
-            status = "正常"
-            status_color = "black"
-            advice = "您的體重正常，請保持！"
+            suggestion = "你體重過輕了，建議增重。"
+            ideal_weight = 18.5 * (self.height / 100) ** 2
+            weight_diff = ideal_weight - self.weight
+            suggestion += f" 建議增加至少 {weight_diff:.2f} 公斤。"
+        elif 18.5 <= bmi < 24.9:
+            suggestion = "你的體重在正常範圍內。保持下去！"
         else:
-            status = "體重過重"
-            ideal_weight = 24.9 * (height / 100) ** 2
-            weight_change = weight - ideal_weight
-            status_color = "red"
-            advice = f"您需要至少減少 {abs(weight_change):.2f} 公斤才能達到正常體重。"
+            suggestion = "你體重過重了，建議減重。"
+            ideal_weight = 24.9 * (self.height / 100) ** 2
+            weight_diff = self.weight - ideal_weight
+            suggestion += f" 建議減少至少 {weight_diff:.2f} 公斤。"
         
-        result_message = f"{name}您好:\n   bmi:{bmi:.2f}\n   體重:{status}\n   建議:{advice}"
+        result = f"{self.name}你好:\n你的 BMI 是: {bmi:.2f}\n{suggestion}"
         
-        # 顯示自定義的msgbox
-        if status == "體重過輕" or status == "體重過重":
-            dialog = CustomMessagebox(root, title="BMI結果", message=result_message)
-        else:
-            messagebox.showinfo("BMI結果", result_message)
+        label = tk.Label(master, text=result, wraplength=300)
+        label.pack(padx=20, pady=20)
+        return label
 
+
+root = tk.Tk()
+root.title("BMI 計算器")
+
+
+tk.Label(root, text="姓名:").grid(row=0, column=0, padx=10, pady=5)
+name_entry = tk.Entry(root)
+name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+tk.Label(root, text="身高 (cm):").grid(row=1, column=0, padx=10, pady=5)
+height_entry = tk.Entry(root)
+height_entry.grid(row=1, column=1, padx=10, pady=5)
+
+tk.Label(root, text="體重 (kg):").grid(row=2, column=0, padx=10, pady=5)
+weight_entry = tk.Entry(root)
+weight_entry.grid(row=2, column=1, padx=10, pady=5)
+
+
+def calculate_bmi():
+    try:
+        name = name_entry.get()
+        height = float(height_entry.get())
+        weight = float(weight_entry.get())
+        BMIDialog(root, "BMI 結果", name, height, weight)
     except ValueError:
-        messagebox.showerror("輸入無效", "請輸入有效的身高和體重數值。")
+        messagebox.showerror("無效輸入", "請輸入有效的姓名、身高和體重數字。")
 
-# 建立主要視窗
-root = ThemedTk(theme="clam")
-root.title("BMI計算器")
-root.configure(bg="#D3D3D3")  # 淡灰色背景
-root.geometry("350x350")  # 設置窗口初始大小
-root.resizable(True, True)  # 允許窗口大小可調
-style = ttk.Style()
-style.theme_use('clam')
 
-# 設定按鈕外觀
-style.configure('TButton', 
-                foreground='white', 
-                background='#1E90FF', 
-                borderwidth=0, 
-                focusthickness=3, 
-                focuscolor='none')
-style.map('TButton', 
-          background=[('active', '#1C86EE')], 
-          foreground=[('active', 'white')])
+calculate_button = tk.Button(root, text="計算 BMI", command=calculate_bmi)
+calculate_button.grid(row=3, columnspan=2, pady=10)
 
-# 標題的Label
-title_label = tk.Label(root, text="BMI計算器", font=("Arial", 16), bg="#D3D3D3")
-title_label.pack(pady=10)
 
-# 建立輸入區的特殊背景框
-input_frame = tk.Frame(root, bg="white", padx=10, pady=10)
-input_frame.pack(pady=10)
-
-# 姓名
-label_name = tk.Label(input_frame, text="姓名:", bg="white")
-label_name.grid(row=0, column=0, padx=5, pady=5)
-
-entry_name = tk.Entry(input_frame)
-entry_name.grid(row=0, column=1, padx=5, pady=5)
-
-# 身高體重
-label_height = tk.Label(input_frame, text="身高 (cm):", bg="white")
-label_height.grid(row=1, column=0, padx=5, pady=5)
-
-entry_height = tk.Entry(input_frame)
-entry_height.grid(row=1, column=1, padx=5, pady=5)
-
-label_weight = tk.Label(input_frame, text="體重 (kg):", bg="white")
-label_weight.grid(row=2, column=0, padx=5, pady=5)
-
-entry_weight = tk.Entry(input_frame)
-entry_weight.grid(row=2, column=1, padx=5, pady=5)
-
-# 計算按鈕設計
-button_calculate = ttk.Button(root, text="計算", command=show_bmi_result, style='TButton')
-button_calculate.pack(pady=10)
-
-# Run
 root.mainloop()
